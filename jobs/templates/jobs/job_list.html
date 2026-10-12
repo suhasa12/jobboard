@@ -1,0 +1,233 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}Browse All Jobs - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{% url 'jobs:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Jobs</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold mb-0">Browse Open Positions</h1>
+            </div>
+            <div>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6">
+                    <span id="visible-jobs-count">{{ job_count }}</span> Active Roles Available
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3">
+            <div class="card custom-card p-3 sticky-top" style="top: 85px; z-index: 10;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center">
+                        <i class="bi bi-funnel text-primary me-2"></i> Filter Jobs
+                    </h5>
+                    <button type="button" id="reset-client-filters" class="btn btn-link btn-sm text-decoration-none p-0">
+                        Reset
+                    </button>
+                </div>
+
+                <!-- 1. Real-Time Instant Client Search (No Page Reload) -->
+                <div class="mb-4">
+                    <label for="client-keyword-filter" class="form-label small fw-semibold">
+                        <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Instant Live Search
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="client-keyword-filter" class="form-control" placeholder="Type keyword or role..." value="{{ search_query }}">
+                    </div>
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">
+                        Filters job cards dynamically as you type.
+                    </div>
+                </div>
+
+                <!-- 2. Skill Pills Filter (Instant JS Toggle) -->
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold d-flex justify-content-between">
+                        <span><i class="bi bi-tags text-primary me-1"></i> Filter by Skill</span>
+                    </label>
+                    <div class="d-flex flex-wrap gap-1" id="skill-pills-container">
+                        {% for skill in popular_skills %}
+                            <button type="button" class="btn btn-sm filter-skill-pill badge-skill border-0 {% if selected_skill|lower == skill|lower %}active-skill{% endif %}" data-skill="{{ skill }}">
+                                {{ skill }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="selected-skill-input" value="{{ selected_skill }}">
+                </div>
+
+                <hr class="my-3 text-muted">
+
+                <!-- 3. Server-side Query Parameters Form (Job Type & Location) -->
+                <form action="{% url 'jobs:job_list' %}" method="get">
+                    <div class="mb-3">
+                        <label for="job_type" class="form-label small fw-semibold">
+                            <i class="bi bi-clock-history text-primary me-1"></i> Job Type
+                        </label>
+                        <select name="job_type" id="job_type" class="form-select form-select-sm">
+                            <option value="">All Job Types</option>
+                            {% for type_code, type_label in job_types %}
+                                <option value="{{ type_code }}" {% if selected_job_type == type_code %}selected{% endif %}>
+                                    {{ type_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="location" class="form-label small fw-semibold">
+                            <i class="bi bi-geo-alt text-primary me-1"></i> Location
+                        </label>
+                        <select name="location" id="location" class="form-select form-select-sm">
+                            <option value="">All Locations</option>
+                            {% for loc in locations %}
+                                <option value="{{ loc }}" {% if selected_location == loc %}selected{% endif %}>
+                                    {{ loc }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Hidden field to preserve search query if submitted -->
+                    <input type="hidden" name="q" value="{{ search_query }}">
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary-custom btn-sm">
+                            <i class="bi bi-filter me-1"></i> Apply Server Filters
+                        </button>
+                        {% if selected_job_type or selected_location or search_query or selected_skill %}
+                            <a href="{% url 'jobs:job_list' %}" class="btn btn-outline-secondary btn-sm">
+                                Clear All Filters
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Job Cards Grid -->
+        <div class="col-lg-9">
+            <!-- Active filter chips if any -->
+            {% if selected_job_type or selected_location or search_query or selected_skill %}
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 bg-light rounded border">
+                    <span class="small fw-semibold text-muted">Active Filters:</span>
+                    {% if search_query %}
+                        <span class="badge bg-secondary">Keyword: "{{ search_query }}"</span>
+                    {% endif %}
+                    {% if selected_job_type %}
+                        <span class="badge bg-primary">Type: {{ selected_job_type }}</span>
+                    {% endif %}
+                    {% if selected_location %}
+                        <span class="badge bg-info text-dark">Location: {{ selected_location }}</span>
+                    {% endif %}
+                    {% if selected_skill %}
+                        <span class="badge bg-success">Skill: {{ selected_skill }}</span>
+                    {% endif %}
+                    <a href="{% url 'jobs:job_list' %}" class="small text-danger ms-auto text-decoration-none">Clear</a>
+                </div>
+            {% endif %}
+
+            <!-- Cards Container -->
+            <div class="row g-4" id="job-cards-container">
+                {% for job in jobs %}
+                    <div class="col-md-6 job-card-col" 
+                         data-title="{{ job.title }}" 
+                         data-company="{{ job.company.name }}" 
+                         data-skills="{{ job.required_skills }}" 
+                         data-type="{{ job.job_type }}" 
+                         data-location="{{ job.company.location }}" 
+                         data-description="{{ job.description }}">
+                        <div class="card custom-card job-card p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="company-logo-box">
+                                    {% if job.company.logo_url %}
+                                        <img src="{{ job.company.logo_url }}" alt="{{ job.company.name }}" onerror="this.parentElement.innerHTML='{{ job.company.name|slice:':2'|upper }}'">
+                                    {% else %}
+                                        {{ job.company.name|slice:":2"|upper }}
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle badge-type">
+                                    {{ job.job_type }}
+                                </span>
+                            </div>
+
+                            <h5 class="fw-bold mb-1">
+                                <a href="{% url 'jobs:job_detail' job.id %}" class="text-decoration-none text-dark">
+                                    {{ job.title }}
+                                </a>
+                            </h5>
+
+                            <div class="text-muted small mb-2 d-flex align-items-center gap-2">
+                                <span><i class="bi bi-building me-1"></i>{{ job.company.name }}</span>
+                                <span>&bull;</span>
+                                <span><i class="bi bi-geo-alt me-1"></i>{{ job.company.location }}</span>
+                            </div>
+
+                            <div class="fw-semibold text-success small mb-2">
+                                <i class="bi bi-cash-stack me-1"></i>{{ job.salary_range }}
+                            </div>
+
+                            <p class="text-muted small mb-3 flex-grow-1">
+                                {{ job.description|truncatewords:16 }}
+                            </p>
+
+                            <!-- Skills list -->
+                            <div class="mb-3">
+                                {% for skill in job.skills_list|slice:":3" %}
+                                    <span class="badge-skill">{{ skill }}</span>
+                                {% endfor %}
+                                {% if job.skills_list|length > 3 %}
+                                    <span class="badge-skill text-muted">+{{ job.skills_list|length|add:"-3" }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top small text-muted">
+                                <span><i class="bi bi-clock me-1"></i>{{ job.posted_date|timesince }} ago</span>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-outline-custom btn-sm">
+                                        Details
+                                    </a>
+                                    <a href="{% url 'jobs:apply_job' job.id %}" class="btn btn-primary-custom btn-sm px-3">
+                                        Apply
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="empty-state custom-card p-5">
+                            <i class="bi bi-search empty-state-icon"></i>
+                            <h4 class="fw-bold">No active jobs found</h4>
+                            <p class="text-muted">No positions match your current filters. Try resetting the filters or searching with broader keywords.</p>
+                            <a href="{% url 'jobs:job_list' %}" class="btn btn-primary-custom">Reset All Filters</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Instant JS Search Empty State (Hidden by default) -->
+            <div id="no-client-results" class="empty-state custom-card p-5 d-none mt-3">
+                <i class="bi bi-funnel empty-state-icon"></i>
+                <h4 class="fw-bold">No matching jobs found</h4>
+                <p class="text-muted">No jobs match your current keyword or skill selection in live filter mode.</p>
+                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('reset-client-filters').click();">
+                    Clear Live Filter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

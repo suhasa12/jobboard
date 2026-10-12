@@ -1,0 +1,121 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}Manage Job Postings - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{% url 'jobs:recruiter_dashboard' %}">ATS Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Manage Jobs</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold mb-0">Job Postings Management</h1>
+            </div>
+            <a href="{% url 'jobs:job_create' %}" class="btn btn-primary-custom">
+                <i class="bi bi-plus-circle me-1"></i> Post New Job
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    {% if jobs %}
+        <div class="card custom-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Company</th>
+                            <th>Type</th>
+                            <th>Applicants</th>
+                            <th>Status</th>
+                            <th>Posted Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">
+                                        <a href="{% url 'jobs:job_detail' job.id %}" class="text-decoration-none text-dark">
+                                            {{ job.title }}
+                                        </a>
+                                    </div>
+                                    <span class="small text-muted">{{ job.salary_range }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-medium">{{ job.company.name }}</span>
+                                    <div class="small text-muted">{{ job.company.location }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-secondary border">{{ job.job_type }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'jobs:recruiter_dashboard' %}?q={{ job.title|urlencode }}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none py-1 px-2">
+                                        <i class="bi bi-people-fill me-1"></i> {{ job.applicant_count }} applicant{{ job.applicant_count|pluralize }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if job.active %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-check-circle me-1"></i> Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                            <i class="bi bi-dash-circle me-1"></i> Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">
+                                    {{ job.posted_date|date:"M d, Y" }}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a href="{% url 'jobs:job_edit' job.id %}" class="btn btn-sm btn-outline-primary" title="Edit Job">
+                                            <i class="bi bi-pencil me-1"></i> Edit
+                                        </a>
+                                        
+                                        <!-- Active / Deactivate Toggle Form -->
+                                        <form action="{% url 'jobs:toggle_job_active' job.id %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            {% if job.active %}
+                                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Deactivate Job" onclick="return confirm('Deactivate this job? It will no longer appear on the public job board.');">
+                                                    <i class="bi bi-pause-circle me-1"></i> Deactivate
+                                                </button>
+                                            {% else %}
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Activate Job">
+                                                    <i class="bi bi-play-circle me-1"></i> Activate
+                                                </button>
+                                            {% endif %}
+                                        </form>
+
+                                        <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" title="View Public Page">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state custom-card p-5">
+            <i class="bi bi-briefcase empty-state-icon"></i>
+            <h4 class="fw-bold">No jobs created yet</h4>
+            <p class="text-muted">Post your first company opening to begin collecting applicants in your ATS pipeline.</p>
+            <a href="{% url 'jobs:job_create' %}" class="btn btn-primary-custom mt-2">
+                <i class="bi bi-plus-circle me-1"></i> Post a New Job
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

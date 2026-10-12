@@ -1,0 +1,30 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}403 - Permission Denied - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card custom-card p-5">
+                <div class="fs-1 text-danger mb-3">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <h1 class="display-6 fw-bold mb-2">403 - Access Denied</h1>
+                <p class="text-muted mb-4">
+                    You do not have permission to access this page. Recruiter ATS actions and candidate pipeline reviews are restricted to authorized staff members.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{% url 'jobs:home' %}" class="btn btn-outline-custom">
+                        <i class="bi bi-house-door me-1"></i> Return Home
+                    </a>
+                    <a href="{% url 'jobs:login' %}?next=/recruiter/" class="btn btn-primary-custom">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Log In as Recruiter
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

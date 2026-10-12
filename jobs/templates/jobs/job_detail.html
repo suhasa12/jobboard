@@ -1,0 +1,262 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}{{ job.title }} at {{ job.company.name }} - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 small">
+                <li class="breadcrumb-item"><a href="{% url 'jobs:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'jobs:job_list' %}">Jobs</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ job.title }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="company-logo-box" style="width: 64px; height: 64px; font-size: 1.6rem;">
+                    {% if job.company.logo_url %}
+                        <img src="{{ job.company.logo_url }}" alt="{{ job.company.name }}" onerror="this.parentElement.innerHTML='{{ job.company.name|slice:':2'|upper }}'">
+                    {% else %}
+                        {{ job.company.name|slice:":2"|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ job.title }}</h1>
+                    <div class="d-flex flex-wrap align-items-center gap-2 text-muted small">
+                        <span class="fw-semibold text-dark">{{ job.company.name }}</span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-geo-alt me-1"></i>{{ job.company.location }}</span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-calendar3 me-1"></i>Posted {{ job.posted_date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                {% if existing_application %}
+                    <div class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6">
+                        <i class="bi bi-check-circle-fill me-1"></i> Applied &bull; {{ existing_application.status }}
+                    </div>
+                {% elif user.is_authenticated %}
+                    <button type="button" class="btn btn-primary-custom px-4" data-bs-toggle="modal" data-bs-target="#applyModal">
+                        <i class="bi bi-send-fill me-1"></i> Apply Now
+                    </button>
+                {% else %}
+                    <a href="{% url 'jobs:login' %}?next={{ request.path }}" class="btn btn-primary-custom px-4">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Log In to Apply
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <!-- Main Job Details Column -->
+        <div class="col-lg-8">
+            <!-- Job Specs Quick Card -->
+            <div class="card custom-card p-4 mb-4">
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <div class="text-muted small">Job Type</div>
+                        <div class="fw-bold fs-6 mt-1 text-primary">
+                            <i class="bi bi-briefcase me-1"></i> {{ job.job_type }}
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="text-muted small">Salary Range</div>
+                        <div class="fw-bold fs-6 mt-1 text-success">
+                            <i class="bi bi-cash-stack me-1"></i> {{ job.salary_range }}
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="text-muted small">Location</div>
+                        <div class="fw-bold fs-6 mt-1 text-dark">
+                            <i class="bi bi-geo-alt me-1"></i> {{ job.company.location }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Required Skills Section -->
+            <div class="card custom-card p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-tools text-primary me-2"></i> Required Skills & Expertise</h5>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for skill in job.skills_list %}
+                        <span class="badge-skill fs-6 py-2 px-3">{{ skill }}</span>
+                    {% empty %}
+                        <span class="text-muted">No specific skills listed.</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Detailed Description -->
+            <div class="card custom-card p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-file-text text-primary me-2"></i> Job Description & Scope</h5>
+                <div class="job-description text-secondary" style="line-height: 1.8; white-space: pre-line;">
+                    {{ job.description }}
+                </div>
+            </div>
+
+            <!-- Company Overview -->
+            <div class="card custom-card p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-building text-primary me-2"></i> About {{ job.company.name }}</h5>
+                <p class="text-secondary mb-3">
+                    {{ job.company.description|default:"A high-performing company building next-generation technology solutions and fostering inclusive team growth." }}
+                </p>
+                <div class="d-flex flex-wrap gap-3 small">
+                    {% if job.company.website %}
+                        <a href="{{ job.company.website }}" target="_blank" rel="noopener" class="text-decoration-none text-primary">
+                            <i class="bi bi-globe me-1"></i> Visit Company Website
+                        </a>
+                    {% endif %}
+                    <span class="text-muted"><i class="bi bi-geo-alt me-1"></i> Headquarters: {{ job.company.location }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Action Card -->
+        <div class="col-lg-4">
+            <div class="card custom-card p-4 sticky-top" style="top: 85px;">
+                {% if existing_application %}
+                    <!-- Application Status Panel -->
+                    <div class="text-center py-3">
+                        <div class="fs-1 text-success mb-2">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Application Submitted!</h5>
+                        <p class="text-muted small mb-3">
+                            You applied on {{ existing_application.applied_date|date:"F d, Y" }}.
+                        </p>
+                        
+                        <div class="p-3 bg-light rounded border mb-3">
+                            <div class="small text-muted mb-1">Current Application Status</div>
+                            <span class="status-pill {{ existing_application.status_badge_class }} fs-6">
+                                {{ existing_application.status }}
+                            </span>
+                        </div>
+
+                        <p class="text-muted small mb-3">
+                            Duplicate applications are prevented by the ATS pipeline. Track your progress below.
+                        </p>
+                        <a href="{% url 'jobs:my_applications' %}" class="btn btn-outline-custom w-100">
+                            <i class="bi bi-journal-text me-1"></i> View All Applications
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- Apply Callout Card -->
+                    <h5 class="fw-bold mb-2">Ready to Apply?</h5>
+                    <p class="text-muted small mb-4">
+                        Submit your cover letter and profile details to get your candidacy in front of the hiring manager.
+                    </p>
+
+                    {% if user.is_authenticated %}
+                        <button type="button" class="btn btn-primary-custom w-100 py-2 mb-3" data-bs-toggle="modal" data-bs-target="#applyModal">
+                            <i class="bi bi-send-fill me-1"></i> Submit Application
+                        </button>
+                        <a href="{% url 'jobs:apply_job' job.id %}" class="btn btn-outline-custom w-100 btn-sm">
+                            Open Fullscreen Apply Form
+                        </a>
+                    {% else %}
+                        <a href="{% url 'jobs:login' %}?next={{ request.path }}" class="btn btn-primary-custom w-100 py-2 mb-2">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Log In to Apply
+                        </a>
+                        <div class="text-center small text-muted">
+                            New here? <a href="{% url 'jobs:register' %}" class="text-primary fw-medium">Create a free account</a>
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <div class="small text-muted">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-shield-check text-success fs-5"></i>
+                            <span>Verified Company Listing</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-clock-history text-primary fs-5"></i>
+                            <span>Fast response within 3-5 business days</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-person-check text-info fs-5"></i>
+                            <span>Direct transmission to recruiting team</span>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Modal (Bootstrap 5 with Client & Server-side Validation) -->
+{% if user.is_authenticated and not existing_application %}
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <div>
+                    <h5 class="modal-title fw-bold" id="applyModalLabel">
+                        Apply for {{ job.title }}
+                    </h5>
+                    <span class="small text-muted">{{ job.company.name }} &bull; {{ job.company.location }}</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="{% url 'jobs:apply_job' job.id %}" method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 small mb-4">
+                        <i class="bi bi-info-circle me-1"></i> Please verify your contact details before submitting your application.
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="id_full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="full_name" id="id_full_name" class="form-control" value="{{ application_form.initial.full_name }}" required>
+                            <div class="invalid-feedback">Please enter your full name.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="id_email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="email" id="id_email" class="form-control" value="{{ application_form.initial.email }}" required>
+                            <div class="invalid-feedback">Please enter a valid email address.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="id_phone" class="form-label">Phone Number</label>
+                            <input type="text" name="phone" id="id_phone" class="form-control" value="{{ application_form.initial.phone }}" placeholder="+1 (555) 123-4567">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="id_portfolio_url" class="form-label">Portfolio / LinkedIn / GitHub URL</label>
+                            <input type="url" name="portfolio_url" id="id_portfolio_url" class="form-control" value="{{ application_form.initial.portfolio_url }}" placeholder="https://...">
+                            <div class="invalid-feedback">Please enter a valid URL starting with http:// or https://</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_cover_letter" class="form-label">
+                            Cover Letter & Candidate Statement <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="cover_letter" id="id_cover_letter" class="form-control" rows="6" placeholder="Introduce yourself and explain why your experience makes you an exceptional match for this position..." required minlength="20"></textarea>
+                        <div class="invalid-feedback">Please provide a cover letter of at least 20 characters.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom px-4">
+                        <i class="bi bi-send-fill me-1"></i> Submit My Application
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

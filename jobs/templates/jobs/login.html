@@ -1,0 +1,64 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}Log In - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card custom-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 60px; height: 60px; font-size: 1.6rem;">
+                        <i class="bi bi-person-lock"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Welcome Back</h3>
+                    <p class="text-muted small">Sign in to manage your applications or hiring pipeline</p>
+                </div>
+
+                <form method="post" action="{% url 'jobs:login' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                        </div>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2 mb-3">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                    </button>
+                </form>
+
+                <div class="text-center small text-muted pt-3 border-top">
+                    Don't have an account? 
+                    <a href="{% url 'jobs:register' %}" class="text-primary fw-semibold text-decoration-none">
+                        Sign up as Candidate
+                    </a>
+                </div>
+
+                <div class="mt-4 p-3 bg-light rounded border small text-muted">
+                    <div class="fw-semibold text-dark mb-1"><i class="bi bi-info-circle me-1"></i> Quick Tips:</div>
+                    <div>&bull; Candidates can apply and track submissions.</div>
+                    <div>&bull; Recruiters/Staff log in with staff credentials for ATS access.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}Recruiter ATS Dashboard - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle mb-1">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Staff Authorized
+                </span>
+                <h1 class="h3 fw-bold mb-0">Applicant Tracking System (ATS)</h1>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'jobs:manage_jobs' %}" class="btn btn-outline-custom btn-sm">
+                    <i class="bi bi-card-checklist me-1"></i> Manage Jobs ({{ stats.total_jobs }})
+                </a>
+                <a href="{% url 'jobs:job_create' %}" class="btn btn-primary-custom btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Post New Job
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Summary Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card border-start border-4 border-dark">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Total Applicants</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card border-start border-4 border-primary">
+                <div class="stat-value text-primary">{{ stats.applied }}</div>
+                <div class="stat-label">Applied</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card border-start border-4 border-warning">
+                <div class="stat-value text-warning">{{ stats.under_review }}</div>
+                <div class="stat-label">Under Review</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card border-start border-4 border-success">
+                <div class="stat-value text-success">{{ stats.shortlisted }}</div>
+                <div class="stat-label">Shortlisted</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card border-start border-4 border-danger">
+                <div class="stat-value text-danger">{{ stats.rejected }}</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card border-start border-4 border-info">
+                <div class="stat-value text-info">{{ stats.active_jobs }}</div>
+                <div class="stat-label">Active Postings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pipeline Filters & Search Bar -->
+    <div class="card custom-card p-3 mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-7">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'jobs:recruiter_dashboard' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+                        All ({{ stats.total }})
+                    </a>
+                    <a href="{% url 'jobs:recruiter_dashboard' %}?status=Applied" class="btn btn-sm {% if status_filter == 'Applied' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Applied ({{ stats.applied }})
+                    </a>
+                    <a href="{% url 'jobs:recruiter_dashboard' %}?status=Under Review" class="btn btn-sm {% if status_filter == 'Under Review' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">
+                        Under Review ({{ stats.under_review }})
+                    </a>
+                    <a href="{% url 'jobs:recruiter_dashboard' %}?status=Shortlisted" class="btn btn-sm {% if status_filter == 'Shortlisted' %}btn-success{% else %}btn-outline-success{% endif %}">
+                        Shortlisted ({{ stats.shortlisted }})
+                    </a>
+                    <a href="{% url 'jobs:recruiter_dashboard' %}?status=Rejected" class="btn btn-sm {% if status_filter == 'Rejected' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                        Rejected ({{ stats.rejected }})
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <form action="{% url 'jobs:recruiter_dashboard' %}" method="get" class="d-flex gap-2">
+                    {% if status_filter %}
+                        <input type="hidden" name="status" value="{{ status_filter }}">
+                    {% endif %}
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Search candidate, job, email..." value="{{ search_query }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary-custom btn-sm px-3">Filter</button>
+                    {% if search_query or status_filter %}
+                        <a href="{% url 'jobs:recruiter_dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Candidate Pipeline Table -->
+    {% if applications %}
+        <div class="card custom-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Applied For</th>
+                            <th>Company</th>
+                            <th>Applied Date</th>
+                            <th>Status Badge</th>
+                            <th>Quick Status Change</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ app.candidate.full_name }}</div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-envelope me-1"></i>{{ app.candidate.email }}
+                                    </div>
+                                    {% if app.candidate.portfolio_url %}
+                                        <a href="{{ app.candidate.portfolio_url }}" target="_blank" class="small text-primary text-decoration-none">
+                                            <i class="bi bi-link-45deg"></i> Portfolio
+                                        </a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ app.job.title }}</div>
+                                    <span class="badge bg-light text-secondary border small">{{ app.job.job_type }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted small">{{ app.job.company.name }}</span>
+                                </td>
+                                <td class="text-muted small">
+                                    {{ app.applied_date|date:"M d, Y" }}
+                                    <div class="text-secondary" style="font-size: 0.75rem;">{{ app.applied_date|timesince }} ago</div>
+                                </td>
+                                <td>
+                                    <span class="status-pill {{ app.status_badge_class }}">
+                                        {{ app.status }}
+                                    </span>
+                                </td>
+                                <td style="min-width: 170px;">
+                                    <form action="{% url 'jobs:update_application_status' app.id %}" method="post" class="d-flex align-items-center gap-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <select name="status" class="form-select form-select-sm auto-submit-status" aria-label="Change status">
+                                            {% for choice_val, choice_label in status_choices %}
+                                                <option value="{{ choice_val }}" {% if app.status == choice_val %}selected{% endif %}>
+                                                    {{ choice_label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </form>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'jobs:application_detail' app.id %}" class="btn btn-outline-custom btn-sm">
+                                        <i class="bi bi-eye me-1"></i> Review
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state custom-card p-5">
+            <i class="bi bi-people empty-state-icon"></i>
+            <h4 class="fw-bold">No candidates found</h4>
+            <p class="text-muted">No applications match the current filter or search query.</p>
+            <a href="{% url 'jobs:recruiter_dashboard' %}" class="btn btn-primary-custom mt-2">
+                Reset Pipeline Filters
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

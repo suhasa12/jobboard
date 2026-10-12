@@ -1,0 +1,131 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}My Applications - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{% url 'jobs:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">My Applications</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold mb-0">My Applications</h1>
+            </div>
+            <div>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6">
+                    {{ count }} Submitted Application{{ count|pluralize }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    {% if applications %}
+        <div class="card custom-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Job Title & Role</th>
+                            <th>Company</th>
+                            <th>Location</th>
+                            <th>Applied Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ app.job.title }}</div>
+                                    <span class="badge bg-light text-secondary border small">{{ app.job.job_type }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="company-logo-box" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                                            {% if app.job.company.logo_url %}
+                                                <img src="{{ app.job.company.logo_url }}" alt="{{ app.job.company.name }}" onerror="this.parentElement.innerHTML='{{ app.job.company.name|slice:':2'|upper }}'">
+                                            {% else %}
+                                                {{ app.job.company.name|slice:":2"|upper }}
+                                            {% endif %}
+                                        </div>
+                                        <span class="fw-medium">{{ app.job.company.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-muted small">
+                                    <i class="bi bi-geo-alt me-1"></i>{{ app.job.company.location }}
+                                </td>
+                                <td class="text-muted small">
+                                    {{ app.applied_date|date:"M d, Y" }}
+                                </td>
+                                <td>
+                                    <span class="status-pill {{ app.status_badge_class }}">
+                                        {% if app.status == 'Applied' %}
+                                            <i class="bi bi-clock-fill"></i>
+                                        {% elif app.status == 'Under Review' %}
+                                            <i class="bi bi-hourglass-split"></i>
+                                        {% elif app.status == 'Shortlisted' %}
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        {% elif app.status == 'Rejected' %}
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        {% endif %}
+                                        {{ app.status }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'jobs:job_detail' app.job.id %}" class="btn btn-outline-custom">
+                                            View Job
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewCoverLetter{{ app.id }}">
+                                            Cover Letter
+                                        </button>
+                                    </div>
+
+                                    <!-- Cover Letter View Modal -->
+                                    <div class="modal fade text-start" id="viewCoverLetter{{ app.id }}" tabindex="-1" aria-labelledby="coverLabel{{ app.id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-light">
+                                                    <div>
+                                                        <h6 class="modal-title fw-bold" id="coverLabel{{ app.id }}">Submitted Cover Letter</h6>
+                                                        <span class="small text-muted">{{ app.job.title }} at {{ app.job.company.name }}</span>
+                                                    </div>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body p-4 text-secondary" style="white-space: pre-line; line-height: 1.7;">
+                                                    {{ app.cover_letter }}
+                                                </div>
+                                                <div class="modal-footer bg-light">
+                                                    <span class="badge {{ app.status_badge_class }} me-auto">{{ app.status }}</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state custom-card p-5">
+            <i class="bi bi-journal-x empty-state-icon"></i>
+            <h4 class="fw-bold">No applications submitted yet</h4>
+            <p class="text-muted">You haven't applied to any positions. Discover openings that match your skills.</p>
+            <a href="{% url 'jobs:job_list' %}" class="btn btn-primary-custom mt-2">
+                <i class="bi bi-search me-1"></i> Explore Available Jobs
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

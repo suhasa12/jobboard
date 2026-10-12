@@ -1,0 +1,152 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}Application Review: {{ application.candidate.full_name }} - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 small">
+                <li class="breadcrumb-item"><a href="{% url 'jobs:recruiter_dashboard' %}">ATS Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Application #{{ application.id }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Application: {{ application.candidate.full_name }}</h1>
+                <p class="text-muted small mb-0">Role: {{ application.job.title }} at {{ application.job.company.name }}</p>
+            </div>
+            <div>
+                <span class="status-pill {{ application.status_badge_class }} fs-6">
+                    Current Status: {{ application.status }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <!-- Left Column: Candidate & Application Info -->
+        <div class="col-lg-8">
+            <!-- Candidate Profile Overview -->
+            <div class="card custom-card p-4 mb-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </span>
+                    <div>
+                        <h5 class="fw-bold mb-0">{{ application.candidate.full_name }}</h5>
+                        <div class="text-muted small">Applied on {{ application.applied_date|date:"F d, Y \a\t H:i" }} UTC</div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Email Address</div>
+                        <a href="mailto:{{ application.candidate.email }}" class="fw-semibold text-primary text-decoration-none">
+                            <i class="bi bi-envelope me-1"></i>{{ application.candidate.email }}
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Phone Number</div>
+                        <div class="fw-semibold text-dark">
+                            <i class="bi bi-telephone me-1"></i>{{ application.candidate.phone|default:'Not provided' }}
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Portfolio / Links</div>
+                        {% if application.candidate.portfolio_url %}
+                            <a href="{{ application.candidate.portfolio_url }}" target="_blank" rel="noopener" class="fw-semibold text-primary text-decoration-none">
+                                <i class="bi bi-link-45deg me-1"></i>{{ application.candidate.portfolio_url }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Candidate Skillset</div>
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            {% for skill in application.candidate.skills_list %}
+                                <span class="badge-skill">{{ skill }}</span>
+                            {% empty %}
+                                <span class="text-muted small">No profile skills registered</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Cover Letter -->
+            <div class="card custom-card p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-chat-left-text text-primary me-2"></i> Candidate Cover Letter</h5>
+                <div class="p-3 bg-light rounded border text-secondary" style="white-space: pre-line; line-height: 1.8;">
+                    {{ application.cover_letter }}
+                </div>
+            </div>
+
+            <!-- Position Overview -->
+            <div class="card custom-card p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-briefcase text-primary me-2"></i> Role Requirements Context</h5>
+                <div class="small text-muted mb-2">Job Title: <strong class="text-dark">{{ application.job.title }}</strong></div>
+                <div class="small text-muted mb-2">Required Skills:</div>
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                    {% for skill in application.job.skills_list %}
+                        <span class="badge bg-light text-dark border">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'jobs:job_detail' application.job.id %}" target="_blank" class="small text-primary text-decoration-none">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> View Full Job Posting
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Column: Status Update Action -->
+        <div class="col-lg-4">
+            <div class="card custom-card p-4 sticky-top" style="top: 85px;">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-sliders text-primary me-2"></i> Update Application Status
+                </h5>
+                <p class="text-muted small mb-4">
+                    Changing the status will update candidate records and the hiring pipeline dashboard.
+                </p>
+
+                <form method="post" action="{% url 'jobs:application_detail' application.id %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                            Recruitment Pipeline Stage <span class="text-danger">*</span>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary-custom py-2">
+                            <i class="bi bi-check-lg me-1"></i> Update Status
+                        </button>
+                        <a href="{% url 'jobs:recruiter_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="small text-muted">
+                    <h6 class="fw-bold text-dark small mb-2">Status Legend:</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><span class="badge bg-primary me-1">Applied</span> Default state upon submission</li>
+                        <li class="mb-2"><span class="badge bg-warning text-dark me-1">Under Review</span> HR screening in progress</li>
+                        <li class="mb-2"><span class="badge bg-success me-1">Shortlisted</span> Candidate advanced to interview</li>
+                        <li><span class="badge bg-danger me-1">Rejected</span> Not moving forward</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

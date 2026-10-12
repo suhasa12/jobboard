@@ -1,0 +1,119 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}Apply for {{ job.title }} - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 small">
+                <li class="breadcrumb-item"><a href="{% url 'jobs:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'jobs:job_list' %}">Jobs</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'jobs:job_detail' job.id %}">{{ job.title }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Apply</li>
+            </ol>
+        </nav>
+        <h1 class="h3 fw-bold mb-1">Submit Application: {{ job.title }}</h1>
+        <p class="text-muted small mb-0">{{ job.company.name }} &bull; {{ job.company.location }} &bull; {{ job.salary_range }}</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card custom-card p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded border mb-4">
+                    <div class="company-logo-box">
+                        {% if job.company.logo_url %}
+                            <img src="{{ job.company.logo_url }}" alt="{{ job.company.name }}" onerror="this.parentElement.innerHTML='{{ job.company.name|slice:':2'|upper }}'">
+                        {% else %}
+                            {{ job.company.name|slice:":2"|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">{{ job.title }}</h6>
+                        <span class="small text-muted">{{ job.company.name }} &bull; {{ job.job_type }}</span>
+                    </div>
+                </div>
+
+                <form method="post" action="{% url 'jobs:apply_job' job.id %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-person-lines-fill text-primary me-2"></i> Your Candidate Information
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                                Full Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                Email Address <span class="text-danger">*</span>
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                Phone Number
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.portfolio_url.id_for_label }}" class="form-label">
+                                Portfolio / LinkedIn / GitHub URL
+                            </label>
+                            {{ form.portfolio_url }}
+                            {% if form.portfolio_url.errors %}
+                                <div class="text-danger small mt-1">{{ form.portfolio_url.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i> Cover Letter & Why You're a Fit
+                    </h5>
+
+                    <div class="mb-4">
+                        <label for="{{ form.cover_letter.id_for_label }}" class="form-label">
+                            Cover Letter <span class="text-danger">*</span>
+                        </label>
+                        {{ form.cover_letter }}
+                        <div class="form-text text-muted">
+                            Minimum 20 characters. Highlight relevant technical experience, notable projects, and enthusiasm.
+                        </div>
+                        {% if form.cover_letter.errors %}
+                            <div class="text-danger small mt-1">{{ form.cover_letter.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Job
+                        </a>
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                            <i class="bi bi-send-fill me-1"></i> Submit Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

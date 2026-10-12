@@ -1,0 +1,128 @@
+{% extends 'jobs/base.html' %}
+{% load static %}
+
+{% block title %}{{ action_title }} - JobBoard ATS{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 small">
+                <li class="breadcrumb-item"><a href="{% url 'jobs:recruiter_dashboard' %}">ATS Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'jobs:manage_jobs' %}">Manage Jobs</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ action_title }}</li>
+            </ol>
+        </nav>
+        <h1 class="h3 fw-bold mb-0">{{ action_title }}</h1>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card custom-card p-4 p-md-5">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-briefcase-fill text-primary me-2"></i> Role Information
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">
+                                Job Title <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.job_type.id_for_label }}" class="form-label">
+                                Job Type <span class="text-danger">*</span>
+                            </label>
+                            {{ form.job_type }}
+                            {% if form.job_type.errors %}
+                                <div class="text-danger small mt-1">{{ form.job_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.company.id_for_label }}" class="form-label">
+                                Hiring Company <span class="text-danger">*</span>
+                            </label>
+                            {{ form.company }}
+                            <div class="form-text small">
+                                Select from registered companies. (Manage in Django Admin if needed)
+                            </div>
+                            {% if form.company.errors %}
+                                <div class="text-danger small mt-1">{{ form.company.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.salary_range.id_for_label }}" class="form-label">
+                                Compensation / Salary Range <span class="text-danger">*</span>
+                            </label>
+                            {{ form.salary_range }}
+                            {% if form.salary_range.errors %}
+                                <div class="text-danger small mt-1">{{ form.salary_range.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-card-checklist text-primary me-2"></i> Skills & Requirements
+                    </h5>
+
+                    <div class="mb-4">
+                        <label for="{{ form.required_skills.id_for_label }}" class="form-label">
+                            Required Skills (Comma-separated) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.required_skills }}
+                        <div class="form-text text-muted">
+                            Example: Python, Django, PostgreSQL, Docker, AWS (Used for tag badges and instant filtering)
+                        </div>
+                        {% if form.required_skills.errors %}
+                            <div class="text-danger small mt-1">{{ form.required_skills.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Job Description & Expectations <span class="text-danger">*</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4 form-check form-switch p-3 bg-light rounded border">
+                        <div class="ms-2">
+                            {{ form.active }}
+                            <label class="form-check-label fw-semibold ms-2" for="{{ form.active.id_for_label }}">
+                                Active Job Posting (Visible to candidates on public board)
+                            </label>
+                            <div class="form-text text-muted ms-2">
+                                Uncheck to save as draft or unpublish from the public board.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'jobs:manage_jobs' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                            <i class="bi bi-check2-circle me-1"></i> {{ button_text|default:'Save Job Posting' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
